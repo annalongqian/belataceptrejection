@@ -117,66 +117,84 @@
 </div>
 
 <script>
-/**
- * REPLICATING THE R ns() BASIS
- * To get the exact math, we implement the basis function for a natural spline.
- */
+// 1. --- DATE CALCULATING FUNCTIONS
+function calcDays() {
+    const txp = new Date(document.getElementById('txp_date').value);
+    const bela = new Date(document.getElementById('bela_date').value);
+    
+    if (!isNaN(txp) && !isNaN(bela)) {
+        const diffTime = bela - txp;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        // Update the display on the page
+        document.getElementById('calc_days_display').innerText = diffDays > 0 ? diffDays : 0;
+    } }
+	
+function calcVintage() {
+    const start = new Date(document.getElementById('dialysis_start').value);
+    const txp = new Date(document.getElementById('txp_date').value); // Using the txp_date from the first section
+    
+    if (!isNaN(start) && !isNaN(txp)) {
+        const diffTime = txp - start;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        // Update the display on the page
+        document.getElementById('calc_vintage_display').innerText = diffDays > 0 ? diffDays : 0;
+    }}
+	
+// 2. --- SPLINE MATH 
 function getNaturalSplineBasis(x) {
     const L = 8;    // Boundary Knot Low
     const K = 180;  // Internal Knot
     const R = 4207; // Boundary Knot High
-
-// Truncated cubic function helper - It calculates (x-k)^3 but only if x > k. This creates the "curves" in the spline.
+	// Truncated cubic function helper - It calculates (x-k)^3 but only if x > k. This creates the "curves" in the spline.
     const d = (val, knot) => {
         const num = Math.pow(Math.max(0, val - knot), 3) - Math.pow(Math.max(0, val - R), 3);
         const den = R - knot;
         return num / den;
     };
-
-// The two basis functions (ns1 and ns2)
+	// The two basis functions (ns1 and ns2)
     // These are derived from the construction of natural cubic splines
     let basis1 = x; // first part of spline is simple linear trend
     let basis2 = d(x, L) - d(x, K); // makes a curve within the boundaries defined by K and R above
 	
-	return [basis1, basis2];
-}
+	return [basis1, basis2]; }
 
+// 3. --- THE MATHEMATICAL MODEL
 function runModel() {
-// 1. Inputs - but also first need to determine which values to use for days since txp & vintage
+  /* Determine which "Days" value to use */
     let final_days = parseFloat(document.getElementById('manual_days').value);
     if (isNaN(final_days)) {
-        final_days = parseFloat(document.getElementById('calc_days_display').innerText); }
-
+        final_days = parseFloat(document.getElementById('calc_days_display').innerText);
+	}
+  /* Determine which "Vintage" value to use */
     let final_vintage = parseFloat(document.getElementById('manual_vintage_months').value);
     if (!isNaN(final_vintage)) {
-        final_vintage = final_vintage * 30.4; // Convert manual months to days
+        final_vintage = final_vintage * 30.4375; // Convert manual months to days
     } else {
-        final_vintage = parseFloat(document.getElementById('calc_vintage_display').innerText); }
-	
+        final_vintage = parseFloat(document.getElementById('calc_vintage_display').innerText);
+    }
+  /* Set variables for HLA and Induction */
 	const x_hla = parseFloat(document.getElementById('hla').value);
     const x_induction = parseFloat(document.getElementById('induction').value);
 	
-// 1A. HARD LIMIT VALIDATION - stop the calculation if numbers are outside set ranges
-    if (x_days < 8) {
+  /* HARD LIMIT VALIDATION - stop the calculation if numbers are outside set ranges */
+    if (final_days < 8 ) {
         alert("Calculator was developed for conversion >7 days after transplant. Please enter a number greater than 7.");
-        return; // Stops the function
-    }
+        return;    } // Stops the function
     if (x_hla < 0 || x_hla > 6) {
         alert("HLA Mismatches must be between 0 and 6.");
-        return;
-    }
-    if (x_dialysis < 0) {
-        alert("Dialysis Vintage cannot be less than 0.");
-        return;
-    }
+        return;    }
+    if (final_vintage < 0) {
+        alert("Dialysis Vintage cannot be negative.");
+        return;    }
 	
-// 2. Spline Transformation - transform 'days' into two variables just like R did
-    const [ns1_raw, ns2_raw] = getNaturalSplineBasis(x_days);
+  /* CALCULATIONS */ 
+	// Spline Transformation - transform 'days' into two variables just like R did 
+    const [ns1_raw, ns2_raw] = getNaturalSplineBasis(final_days);
 
-	/* For implementation, use the coefficients from R GLM output. 
-	   But note that in original R calculations they apply 'matrix basis function' */
+	// For implementation, use the coefficients from R GLM output. 
+	// But note that in original R calculations they apply 'matrix basis function' 
 
-// 3. Regression Coefficients (from GLM output in R)
+	// Regression Coefficients (from GLM output in R)
     const b0 = -2.8326130;
     const b_ns1 = -5.0316209;
     const b_ns2 = -2.0085340;
@@ -184,21 +202,21 @@ function runModel() {
     const b_dialysis = 0.0002568;
     const b_induction = 0.7946519;
 
-// 4. Calculate Linear Predictor (z)
+	// Calculate Linear Predictor (z)
     // Sum of (Coefficient * Variable). Value of z is 'logits' and will need to be tranformed to probability later
     let z = b0 + 
             (b_ns1 * ns1_raw / 4207) + // Scaled to max range
             (b_ns2 * ns2_raw / 1000000000) + // Cubic scaling
             (b_hla * x_hla) + 
-            (b_dialysis * x_dialysis) + 
+            (b_dialysis * final_vintage) + 
             (b_induction * x_induction);
 	
-// 5. Logistic Transformation - transform logit into a probability then into a percent
+	// Logistic Transformation - transform logit into a probability then into a percent
     // Probability = 1 / (1 + e^-z)
     const prob = 1 / (1 + Math.exp(-z));
     const percent = (prob * 100).toFixed(2);
 	
-// 6. UI Update
+/* UI Update */
     const resDiv = document.getElementById('results');
     const resVal = document.getElementById('res-value');
     
