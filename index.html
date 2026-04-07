@@ -54,12 +54,20 @@
   <!-- below starts the content visible on the webpage -->
 
 <div class="container">
-    <h2>ACR Risk Calculator [beta version - pending peer review] </h2>
+    <h2>ACR Risk Calculator [beta version, pending peer review] </h2>
     <div class="subtitle">Calculate risk of acute cellular rejection within 1 year after conversion to belatacept </div>
-
-    <div class="form-group">
-        <label>Days from Transplant to Conversion</label>
-        <input type="number" id="days" value="180" min="8" max="4207">
+	
+	<div class="form-group" style="background: #fdfdfd; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
+        <label>Date of transplant</label>
+        <input type="date" id="txp_date" onchange="calcDays()">
+        
+        <label style="margin-top:10px;">(Intended) date of belatacept conversion</label>
+        <input type="date" id="bela_date" onchange="calcDays()">
+        
+        <p style="font-size: 0.85rem; color: #666;">Calculated days: <span id="calc_days_display">0</span></p>
+        
+        <label style="color: #666; font-size: 0.8rem; margin-top:10px;">Optional: manually enter days from transplant to conversion. This will be used in risk model instead of calculated days above.</label>
+        <input type="number" id="manual_days" placeholder="Enter days directly">
     </div>
 	
 	<div class="form-group">
@@ -78,6 +86,16 @@
 	<div class="form-group">
         <label>Dialysis Vintage (years on dialysis before transplant)</label>
         <input type="number" id="dialysis" value="1000" min="0">
+    </div>
+
+	<div class="form-group" style="background: #fdfdfd; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
+        <label>Date started dialysis</label>
+        <input type="date" id="dialysis_start" onchange="calcVintage()">
+        
+        <p style="font-size: 0.85rem; color: #666;">Calculated Days: <span id="calc_vintage_display">0</span></p>
+
+        <label style="color: #666; font-size: 0.8rem; margin-top:10px;">Optional: manually input dialysis (months). This will be used in risk model instead of calculated vintage above.</label>
+        <input type="number" id="manual_vintage_months" placeholder="Enter months">
     </div>
 
 	<button onclick="runModel()">Calculate Probability</button>
@@ -124,15 +142,23 @@ function getNaturalSplineBasis(x) {
 }
 
 function runModel() {
-    // 1. Inputs
-    const x_days = parseFloat(document.getElementById('days').value);
-    const x_hla = parseFloat(document.getElementById('hla').value);
-    const x_dialysis = parseFloat(document.getElementById('dialysis').value);
-    const x_induction = parseFloat(document.getElementById('induction').value);
+// 1. Inputs - but also first need to determine which values to use for days since txp & vintage
+    let final_days = parseFloat(document.getElementById('manual_days').value);
+    if (isNaN(final_days)) {
+        final_days = parseFloat(document.getElementById('calc_days_display').innerText); }
 
-	// 1A. HARD LIMIT VALIDATION - stop the calculation if numbers are outside set ranges
+    let final_vintage = parseFloat(document.getElementById('manual_vintage_months').value);
+    if (!isNaN(final_vintage)) {
+        final_vintage = final_vintage * 30.4; // Convert manual months to days
+    } else {
+        final_vintage = parseFloat(document.getElementById('calc_vintage_display').innerText); }
+	
+	const x_hla = parseFloat(document.getElementById('hla').value);
+    const x_induction = parseFloat(document.getElementById('induction').value);
+	
+// 1A. HARD LIMIT VALIDATION - stop the calculation if numbers are outside set ranges
     if (x_days < 8) {
-        alert("Calculator was developed for conversion >7 days after transplant.");
+        alert("Calculator was developed for conversion >7 days after transplant. Please enter a number greater than 7.");
         return; // Stops the function
     }
     if (x_hla < 0 || x_hla > 6) {
@@ -144,13 +170,13 @@ function runModel() {
         return;
     }
 	
-	// 2. Spline Transformation - transform 'days' into two variables just like R did
+// 2. Spline Transformation - transform 'days' into two variables just like R did
     const [ns1_raw, ns2_raw] = getNaturalSplineBasis(x_days);
 
 	/* For implementation, use the coefficients from R GLM output. 
 	   But note that in original R calculations they apply 'matrix basis function' */
 
-	// 3. Regression Coefficients (from GLM output in R)
+// 3. Regression Coefficients (from GLM output in R)
     const b0 = -2.8326130;
     const b_ns1 = -5.0316209;
     const b_ns2 = -2.0085340;
@@ -158,7 +184,7 @@ function runModel() {
     const b_dialysis = 0.0002568;
     const b_induction = 0.7946519;
 
-	// 4. Calculate Linear Predictor (z)
+// 4. Calculate Linear Predictor (z)
     // Sum of (Coefficient * Variable). Value of z is 'logits' and will need to be tranformed to probability later
     let z = b0 + 
             (b_ns1 * ns1_raw / 4207) + // Scaled to max range
@@ -167,12 +193,12 @@ function runModel() {
             (b_dialysis * x_dialysis) + 
             (b_induction * x_induction);
 	
-	// 5. Logistic Transformation - transform logit into a probability then into a percent
+// 5. Logistic Transformation - transform logit into a probability then into a percent
     // Probability = 1 / (1 + e^-z)
     const prob = 1 / (1 + Math.exp(-z));
     const percent = (prob * 100).toFixed(2);
 	
-	// 6. UI Update
+// 6. UI Update
     const resDiv = document.getElementById('results');
     const resVal = document.getElementById('res-value');
     
