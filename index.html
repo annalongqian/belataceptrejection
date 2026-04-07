@@ -6,7 +6,7 @@
 <head>
 	<meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>1-year ACR Risk Calculator </title>
+  <title>Bela-ACR Risk Calculator </title>
 
 <!-- page formatting -->
 <style>
@@ -45,7 +45,7 @@
 	/* style the output number */
         .risk-pct { font-size: 2.5rem; font-weight: 800; display: block; margin: 10px 0; }
 	/* style the 'disclaimer' text. Adds a top border to separate it visually */
-        .disclaimer { font-size: 0.75rem; color: #95a5a6; margin-top: 30px; line-height: 1.4; border-top: 1px solid #eee; padding-top: 15px; }
+        .disclaimer { font-size: 0.8rem; color: #95a5a6; margin-top: 30px; line-height: 1.4; border-top: 1px solid #eee; padding-top: 15px; }
 	
     </style>
 
@@ -54,28 +54,29 @@
   <!-- below starts the content visible on the webpage -->
 
 <div class="container">
-    <h2>ACR Risk Calculator [beta version, pending peer review] </h2>
-    <div class="subtitle">Calculate risk of acute cellular rejection within 1 year after conversion to belatacept </div>
+    <h2>Calculate Risk of Acute Cellular Rejection within 1 Year after Conversion to Belatacept </h2>
+    <div class="subtitle">BETA VERSION - pending peer review </div>
 	
-	<div class="form-group" style="background: #fdfdfd; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
-        <label>Date of transplant</label>
+	<div class="form-group" style="background: #e6f0fa; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
+        <label>Days from transplant to conversion </label>
+		<label style="font-size: 0.9rem; margin-top:10px;"> Transplant date: </label>
         <input type="date" id="txp_date" onchange="calcDays()">
         
-        <label style="margin-top:10px;">(Intended) date of belatacept conversion</label>
+        <label style="font-size: 0.9rem; margin-top:10px;"> (Intended) date of belatacept conversion: </label>
         <input type="date" id="bela_date" onchange="calcDays()">
         
-        <p style="font-size: 0.85rem; color: #666;">Calculated days: <span id="calc_days_display">0</span></p>
+        <p style="font-size: 1.1rem; color: #666;">Calculated days: <span id="calc_days_display">0</span></p>
         
-        <label style="color: #666; font-size: 0.8rem; margin-top:10px;">Optional: manually enter days from transplant to conversion. This will be used in risk model instead of calculated days above.</label>
+        <label style="color: #666; font-size: 1rem; margin-top:10px;">Optional: manually enter days from transplant to conversion. Overrides calculated days above.</label>
         <input type="number" id="manual_days" placeholder="Enter days directly">
     </div>
 	
-	<div class="form-group">
+	<div class="form-group" style="background: #e6f0fa; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
         <label>HLA Mismatches (0-6)</label>
         <input type="number" id="hla" value="3" min="0" max="6">
     </div>
 
-	<div class="form-group">
+	<div class="form-group" style="background: #e6f0fa; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
         <label>Induction Immunosuppression</label>
         <select id="induction">
             <option value="1">Basiliximab</option>
@@ -83,25 +84,21 @@
         </select>
     </div>
 
-	<div class="form-group">
-        <label>Dialysis Vintage (years on dialysis before transplant)</label>
-        <input type="number" id="dialysis" value="1000" min="0">
-    </div>
-
-	<div class="form-group" style="background: #fdfdfd; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
-        <label>Date started dialysis</label>
+	<div class="form-group" style="background: #e6f0fa; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
+        <label>Dialysis vintage</label>
+		<label style="font-size: 0.9rem; margin-top:10px;"> Date started dialysis: </label>
         <input type="date" id="dialysis_start" onchange="calcVintage()">
         
-        <p style="font-size: 0.85rem; color: #666;">Calculated Days: <span id="calc_vintage_display">0</span></p>
+        <p style="font-size: 1.1rem; color: #666;">Calculated days: <span id="calc_vintage_display">0</span></p>
 
-        <label style="color: #666; font-size: 0.8rem; margin-top:10px;">Optional: manually input dialysis (months). This will be used in risk model instead of calculated vintage above.</label>
+        <label style="color: #666; font-size: 1rem; margin-top:10px;">Optional: manually enter patient's time on dialysis (months). Enter 0 for preemptive transplant. Overrides calculated vintage above.</label>
         <input type="number" id="manual_vintage_months" placeholder="Enter months">
     </div>
 
-	<button onclick="runModel()">Calculate Probability</button>
+	<button onclick="runModel()">Calculate ACR Risk</button>
 
 	<div id="results">
-        <span id="res-label">Predicted 1-Year Risk:</span>
+        <span id="res-label">Predicted probability of acute cellular rejection within 1 year of conversion:</span>
         <span id="res-value" class="risk-pct">--</span>
     </div>
 
