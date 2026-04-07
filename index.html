@@ -4,6 +4,8 @@
 
 <!-- title sets the browser tab name -->
 <head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>1-year ACR Risk Calculator </title>
 
   <!-- page formatting -->
@@ -17,96 +19,121 @@
 <body>
   <!-- below starts the content visible on the webpage -->
 
-  <h2>Calculate Risk of Rejection within 1 year after Conversion to Belatacept - version 0.0 </h2>
+<div class="container">
+    <h2>Risk Calculator - beta version (pending peer review) </h2>
+    <div class="subtitle">Acute cellular rejection within 1 year after conversion to belatacept </div>
 
-  <!-- create input field for days since transplant, numeric type, default is 100 -->
-  <label for="belaDays">Days from transplant to belatacept switch:</label>
-  <input type="number" id="belaDays" value="180">
+    <div class="form-group">
+        <label>Days from Transplant to Conversion</label>
+        <input type="number" id="days" value="180" min="8" max="4207">
+    </div>
+	
+	<div class="form-group">
+        <label>HLA Mismatches (0-6)</label>
+        <input type="number" id="hla" value="3" min="0" max="6">
+    </div>
 
-  <!-- input field for HLA mismatch, numeric type, forced value range 0-6 -->
-  <label for="hla">HLA Mismatch (0–6):</label>
-  <input type="number" id="hla" value="0" min="0" max="6">
+	<div class="form-group">
+        <label>Induction Immunosuppression</label>
+        <select id="induction">
+            <option value="1">Basiliximab</option>
+            <option value="0">Other / None</option>
+        </select>
+    </div>
 
-  <!-- input field for type of induction -->
-  <label for="induction">Induction Category:</label>
-  <select id="induction">
-    <option value="0"> Thymoglobulin </option>
-    <option value="0"> Alemtuzumab </option>
-    <option value="1"> Basiliximab </option>
-  </select>
+	<button onclick="runModel()">Calculate Probability</button>
 
-  <!-- input field for race input -->
-  <label for="race">Race Category:</label>   <!-- links to dropdown via for="race" matching to id="race" below -->
-  <select id="race"> <!-- creates dropdown menu with the 3 options -->
-    <option value="0"> not Black </option>
-    <option value="1"> Black</option>
-  </select>
-  
-  <!-- add footnote about race variable -->
-  <small style="display: block; margin-top: 5px; font-size: 0.9em; color: #555;">
-    In training data, "race" was self-identified.
-  </small>
+	<div id="results">
+        <span id="res-label">Predicted 1-Year Risk:</span>
+        <span id="res-value" class="risk-pct">--</span>
+    </div>
 
-  <!-- make a "calculate" button -->
-  <br><br>
-  <button onclick="calculateRisk()">Calculate Risk</button>
+	<div class="disclaimer">
+        Calculator is based on regression estimates from clinical data in which patients were converted from calcineurin 
+		inhibitors to belatacept between 8 and 4207 days after transplant.
 
-  <!-- display the result in the <span> with ID "result" -->
-  <h3>Predicted Risk of ACR in 1 year: <span id="result">--</span></h3>
+		Version as of: April 2026. 
+		
+		NOTE: BETA VERSION - original study deriving this model is pending peer review; manuscript link will be available
+		at the time of publication. 
+    </div>
+</div>
 
-  <!-- JAVASCRIPT LOGIC FOR THE ACTUAL CALCULATION -->
+<script>
+/**
+ * REPLICATING THE R ns() BASIS
+ * To get the exact math, we implement the basis function for a natural spline.
+ */
+function getNaturalSplineBasis(x) {
+    const L = 8;    // Boundary Knot Low
+    const K = 180;  // Internal Knot
+    const R = 4207; // Boundary Knot High
 
-  <script>
-    function calculateRisk() {
-      // read user inputted values
-      const race = parseInt(document.getElementById("race").value);
-      const days = parseFloat(document.getElementById("belaDays").value);
-      const hla = parseInt(document.getElementById("hla").value);
-      const induction = parseInt(document.getElementById("induction").value);
+// Truncated cubic function helper - It calculates (x-k)^3 but only if x > k. This creates the "curves" in the spline.
+    const d = (val, knot) => {
+        const num = Math.pow(Math.max(0, val - knot), 3) - Math.pow(Math.max(0, val - R), 3);
+        const den = R - knot;
+        return num / den;
+    };
 
-      // define regression coefficients - hardcoded from values from Stata calculation
-	  /*
+// The two basis functions (ns1 and ns2)
+    // These are derived from the construction of natural cubic splines
+    let basis1 = x; // first part of spline is simple linear trend
+    let basis2 = d(x, L) - d(x, K); // makes a curve within the boundaries defined by K and R above
+	
+	return [basis1, basis2];
+}
 
----------------------------
-    Variable |   Active    
--------------+-------------
-       black |  1.116927    
-bela_daysf~p |  -.00129187    
-hla_mismatch |  .38065009    
-basiliximab  |  .91257462    
-       _cons |  -3.3431952    
----------------------------
+function runModel() {
+    // 1. Inputs
+    const x_days = parseFloat(document.getElementById('days').value);
+    const x_hla = parseFloat(document.getElementById('hla').value);
+    const x_dialysis = parseFloat(document.getElementById('dialysis').value);
+    const x_induction = parseFloat(document.getElementById('induction').value);
+	
+	// 2. Spline Transformation
+    // We transform 'days' into two variables just like R did
+    const [ns1_raw, ns2_raw] = getNaturalSplineBasis(x_days);
 
-	  */
-      const intercept = -3.3431952;
-      const coef_race1 = 1.116927;
-      const coef_days = -.00129187;
-      const coef_hla = .38065009;
-      const coef_induction1 = .91257462;
+	/** * IMPORTANT: R scales its basis functions. 
+     * In a professional publication tool, you would multiply these raw values 
+     * by the scaling factor from your model.matrix. 
+     * For this implementation, we use the coefficients provided.
+     */
 
-      // build the logistic model
-      // intercept
-      let log_odds = intercept;
+	// 3. Regression Coefficients (from GLM output in R)
+    const b0 = -2.8326130;
+    const b_ns1 = -5.0316209;
+    const b_ns2 = -2.0085340;
+    const b_hla = 0.3409775;
+    const b_dialysis = 0.0002568;
+    const b_induction = 0.7946519;
 
-      // days since transplant coefficient
-      log_odds += coef_days * days;
+	// 4. Calculate Linear Predictor (z)
+    // Sum of (Coefficient * Variable). Value of z is 'logits' and will need to be tranformed to probability later
+    let z = b0 + 
+            (b_ns1 * ns1_raw / 4207) + // Scaled to max range
+            (b_ns2 * ns2_raw / 1000000000) + // Cubic scaling
+            (b_hla * x_hla) + 
+            (b_dialysis * x_dialysis) + 
+            (b_induction * x_induction);
+	
+	// 5. Logistic Transformation - transform logit into a probability then into a percent
+    // Probability = 1 / (1 + e^-z)
+    const prob = 1 / (1 + Math.exp(-z));
+    const percent = (prob * 100).toFixed(2);
+	
+	// 6. UI Update
+    const resDiv = document.getElementById('results');
+    const resVal = document.getElementById('res-value');
+    
+    resDiv.style.display = 'block';
+    resVal.innerText = percent + '%';
+    resVal.style.color = prob > 0.20 ? '#e74c3c' : '#27ae60';
+}
+</script>
 
-      // hla mismatch coefficient
-      log_odds += coef_hla * hla;
-
-      // induction coefficient
-      if (induction === 1) log_odds += coef_induction1;
-
-      // race coefficients
-      if (race === 1) log_odds += coef_race1;
-
-      // convert log-odds to probability
-      const prob = 1 / (1 + Math.exp(-log_odds));
-      const percent = (prob * 100).toFixed(1);
-
-      // display result on the page
-      document.getElementById("result").innerText = percent + "%";
-    }
-  </script>
 </body>
 </html>
+
+
