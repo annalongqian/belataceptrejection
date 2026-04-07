@@ -129,16 +129,26 @@ function runModel() {
     const x_hla = parseFloat(document.getElementById('hla').value);
     const x_dialysis = parseFloat(document.getElementById('dialysis').value);
     const x_induction = parseFloat(document.getElementById('induction').value);
+
+	// 1A. HARD LIMIT VALIDATION - stop the calculation if numbers are outside set ranges
+    if (x_days < 8) {
+        alert("Calculator was developed for conversion >7 days after transplant.");
+        return; // Stops the function
+    }
+    if (x_hla < 0 || x_hla > 6) {
+        alert("HLA Mismatches must be between 0 and 6.");
+        return;
+    }
+    if (x_dialysis < 0) {
+        alert("Dialysis Vintage cannot be less than 0.");
+        return;
+    }
 	
-	// 2. Spline Transformation
-    // We transform 'days' into two variables just like R did
+	// 2. Spline Transformation - transform 'days' into two variables just like R did
     const [ns1_raw, ns2_raw] = getNaturalSplineBasis(x_days);
 
-	/** * IMPORTANT: R scales its basis functions. 
-     * In a professional publication tool, you would multiply these raw values 
-     * by the scaling factor from your model.matrix. 
-     * For this implementation, we use the coefficients provided.
-     */
+	/* For implementation, use the coefficients from R GLM output. 
+	   But note that in original R calculations they apply 'matrix basis function' */
 
 	// 3. Regression Coefficients (from GLM output in R)
     const b0 = -2.8326130;
@@ -168,7 +178,8 @@ function runModel() {
     
     resDiv.style.display = 'block';
     resVal.innerText = percent + '%';
-    resVal.style.color = prob > 0.20 ? '#e74c3c' : '#27ae60';
+	// display output as black text
+    resVal.style.color = '#333';
 }
 </script>
 
