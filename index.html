@@ -8,20 +8,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>1-year ACR Risk Calculator </title>
 
-  <!-- page formatting -->
-  <!-- sets font to Arial, adds padding, inputs and dropdowns styled for spacing, labels bolded and spaced vertically -->
-  <style>
-    body { font-family: Arial; padding: 20px; max-width: 600px; margin: auto; }
-    input, select { margin: 5px; padding: 5px; width: 100%; }
-    label { font-weight: bold; display: block; margin-top: 15px; }
-  </style>
+<!-- page formatting -->
+<style>
+	:root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; } 
+	/* above code sets colours to be used later */
+	
+	/* tells the browser to use the default clean font of the device (San Francisco on Mac, Segoe UI on Windows) */
+	body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; color: #333; line-height: 1.6; margin: 0; padding: 20px; }
+    /* centers the calculator on the screen and prevents it from stretching too wide on large monitors */
+	.container {max-width: 550px; margin: 40px auto; 
+				background: white; padding: 30px; border-radius: 12px; 
+				/* box-shadow adds a subtle depth (shadow) so the calculator appears to "float" above the light grey background */
+				box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+
+	h2 { 
+	/* main title - set color to 'primary' defined at the top of file, centers, sets margin */  
+		color: var(--primary); text-align: center; margin-bottom: 5px; } 
+	/* subtitle - set colour, font size, margin */
+        .subtitle { text-align: center; color: #7f8c8d; font-size: 0.9rem; margin-bottom: 30px; }
+	/* puts 20px space between each 'container' (each question input) so it doesn't look cluttered */
+        .form-group { margin-bottom: 20px; }
+	/* make labels go on their own line above input box, with semi-bold text, set to 'primary' colour */
+        label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--primary); }
+	/* style the input and dropdown boxes */
+        input, select { width: 100%; padding: 12px; border: 1px solid #dcdde1; border-radius: 6px; 
+					   font-size: 1rem; transition: border-color 0.3s; box-sizing: border-box; }
+	/* add a highlight to the box that's currently being edited */
+        input:focus { border-color: var(--accent); outline: none; }
+	/* style the 'Calculate' button */
+        button { width: 100%; background-color: var(--accent); color: white; padding: 14px; 
+				border: none; border-radius: 6px; font-size: 1.1rem; font-weight: bold; 
+				cursor: pointer; transition: background 0.3s; margin-top: 10px; }
+        button:hover { background-color: #2980b9; }
+	
+        #results { margin-top: 30px; padding: 20px; border-radius: 8px; display: none; text-align: center; border: 1px solid #eee; }
+	/* style the output number */
+        .risk-pct { font-size: 2.5rem; font-weight: 800; display: block; margin: 10px 0; }
+	/* style the 'disclaimer' text. Adds a top border to separate it visually */
+        .disclaimer { font-size: 0.75rem; color: #95a5a6; margin-top: 30px; line-height: 1.4; border-top: 1px solid #eee; padding-top: 15px; }
+	
+    </style>
+
 </head>
 <body>
   <!-- below starts the content visible on the webpage -->
 
 <div class="container">
-    <h2>Risk Calculator - beta version (pending peer review) </h2>
-    <div class="subtitle">Acute cellular rejection within 1 year after conversion to belatacept </div>
+    <h2>ACR Risk Calculator [beta version - pending peer review] </h2>
+    <div class="subtitle">Calculate risk of acute cellular rejection within 1 year after conversion to belatacept </div>
 
     <div class="form-group">
         <label>Days from Transplant to Conversion</label>
@@ -37,8 +71,13 @@
         <label>Induction Immunosuppression</label>
         <select id="induction">
             <option value="1">Basiliximab</option>
-            <option value="0">Other / None</option>
+            <option value="0">Thymoglobulin or Alemtuzumab</option>
         </select>
+    </div>
+
+	<div class="form-group">
+        <label>Dialysis Vintage (years on dialysis before transplant)</label>
+        <input type="number" id="dialysis" value="1000" min="0">
     </div>
 
 	<button onclick="runModel()">Calculate Probability</button>
@@ -50,12 +89,12 @@
 
 	<div class="disclaimer">
         Calculator is based on regression estimates from clinical data in which patients were converted from calcineurin 
-		inhibitors to belatacept between 8 and 4207 days after transplant.
-
-		Version as of: April 2026. 
-		
-		NOTE: BETA VERSION - original study deriving this model is pending peer review; manuscript link will be available
-		at the time of publication. 
+        inhibitors to belatacept between 8 and 4207 days after transplant.
+        <br><br>
+        <strong>Version as of: April 2026.</strong>
+        <br><br>
+        NOTE: BETA VERSION - original study deriving this model is pending peer review; manuscript link will be available
+        at the time of publication. 
     </div>
 </div>
 
