@@ -1,82 +1,107 @@
 <!DOCTYPE html>
-<html>
-<!-- tells browser that the document is html file -->
-
-<!-- title sets the browser tab name -->
+<html lang="en">
 <head>
-	<meta charset="UTF-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bela-ACR Risk Calculator </title>
+    <title>Bela-ACR Risk Calculator</title>
 
-<!-- page formatting -->
 <style>
-	:root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; } 
-	/* above code sets colours to be used later */
-	
-	/* tells the browser to use the default clean font of the device (San Francisco on Mac, Segoe UI on Windows) */
-	body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; color: #333; line-height: 1.6; margin: 0; padding: 20px; }
-    /* centers the calculator on the screen and prevents it from stretching too wide on large monitors */
-	.container {max-width: 550px; margin: 40px auto; 
-				background: white; padding: 30px; border-radius: 12px; 
-				/* box-shadow adds a subtle depth (shadow) so the calculator appears to "float" above the light grey background */
-				box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+    :root {
+        --primary: #2c3e50;
+        --accent-3: #3498db;
+        --accent-3-hover: #2980b9;
+        --input-bg-3: #e6f0fa;
+        --badge-bg-3: #e8f4fd;
+        --badge-border-3: #bee3f8;
+        --accent-4: #3a7d44;
+        --accent-4-hover: #2e6438;
+        --input-bg-4: #E1F0DD;
+        --badge-bg-4: #e6f4e6;
+        --badge-border-4: #a8cfa8;
+    }
 
-	h2 { 
-	/* main title - set color to 'primary' defined at the top of file, centers, sets margin */  
-		color: var(--primary); text-align: center; margin-bottom: 5px; } 
-	/* subtitle - set colour, font size, margin */
-        .subtitle { text-align: center; color: #7f8c8d; font-size: 0.9rem; margin-bottom: 30px; }
-	/* puts 20px space between each 'container' (each question input) so it doesn't look cluttered */
-        .form-group { margin-bottom: 20px; }
-	/* make labels go on their own line above input box, with semi-bold text, set to 'primary' colour */
-        label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--primary); }
-	/* style the input and dropdown boxes */
-        input, select { width: 100%; padding: 12px; border: 1px solid #dcdde1; border-radius: 6px; 
-					   font-size: 1rem; transition: border-color 0.3s; box-sizing: border-box; }
-	/* add a highlight to the box that's currently being edited */
-        input:focus { border-color: var(--accent); outline: none; }
-	/* style the 'Calculate' button */
-        button { width: 100%; background-color: var(--accent); color: white; padding: 14px; 
-				border: none; border-radius: 6px; font-size: 1.1rem; font-weight: bold; 
-				cursor: pointer; transition: background 0.3s; margin-top: 10px; }
-        button:hover { background-color: #2980b9; }
-	
-        #results { margin-top: 30px; padding: 20px; border-radius: 8px; display: none; text-align: center; border: 1px solid #eee; }
-	/* style the output number */
-        .risk-pct { font-size: 2.5rem; font-weight: 800; display: block; margin: 10px 0; }
-	/* style the 'disclaimer' text. Adds a top border to separate it visually */
-        .disclaimer { font-size: 0.8rem; color: #95a5a6; margin-top: 30px; line-height: 1.4; border-top: 1px solid #eee; padding-top: 15px; }
-	
-    </style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; color: #333; line-height: 1.6; margin: 0; padding: 20px; }
 
+    .container { max-width: 550px; margin: 40px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+
+    h2 { color: var(--primary); text-align: center; margin-bottom: 5px; }
+    .subtitle { text-align: center; color: #7f8c8d; font-size: 0.9rem; margin-bottom: 20px; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--primary); }
+    input, select { width: 100%; padding: 12px; border: 1px solid #dcdde1; border-radius: 6px; font-size: 1rem; transition: border-color 0.3s; box-sizing: border-box; }
+
+    /* 3-var theme (blue) */
+    .theme-3 input:focus, .theme-3 select:focus { border-color: var(--accent-3); outline: none; }
+    .theme-3 .calc-btn { background-color: var(--accent-3); }
+    .theme-3 .calc-btn:hover { background-color: var(--accent-3-hover); }
+    .theme-3 .input-section { background: var(--input-bg-3); }
+    .theme-3 .model-badge { background: var(--badge-bg-3); color: var(--accent-3); border: 1px solid var(--badge-border-3); }
+    .theme-3 .toggle-btn.active { color: var(--accent-3); }
+
+    /* 4-var theme (green) */
+    .theme-4 input:focus, .theme-4 select:focus { border-color: var(--accent-4); outline: none; }
+    .theme-4 .calc-btn { background-color: var(--accent-4); }
+    .theme-4 .calc-btn:hover { background-color: var(--accent-4-hover); }
+    .theme-4 .input-section { background: var(--input-bg-4); }
+    .theme-4 .model-badge { background: var(--badge-bg-4); color: var(--accent-4); border: 1px solid var(--badge-border-4); }
+    .theme-4 .toggle-btn.active { color: var(--accent-4); }
+
+    .calc-btn { width: 100%; color: white; padding: 14px; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: background 0.3s; margin-top: 10px; }
+
+    /* Model toggle pills */
+    .model-toggle { display: flex; background: #ecf0f1; border-radius: 8px; padding: 4px; margin-bottom: 25px; }
+    .toggle-btn { flex: 1; padding: 10px 8px; border: none; background: transparent; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; color: #7f8c8d; transition: all 0.2s; margin: 0; width: auto; }
+    .toggle-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
+    .toggle-btn:hover:not(.active) { color: var(--primary); background: rgba(255,255,255,0.5); }
+
+    .model-badge { display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; margin-bottom: 15px; }
+
+    #results { margin-top: 30px; padding: 20px; border-radius: 8px; display: none; text-align: center; border: 1px solid #eee; }
+    .risk-pct { font-size: 2.5rem; font-weight: 800; display: block; margin: 10px 0; }
+    .auc-info { font-size: 0.85rem; color: #555; margin-top: 20px; padding: 12px 15px; background: #f4f6f8; border-radius: 6px; border: 1px solid #e0e0e0; }
+    .auc-info strong { color: var(--primary); }
+    .disclaimer { font-size: 0.8rem; color: #95a5a6; margin-top: 20px; line-height: 1.4; border-top: 1px solid #eee; padding-top: 15px; }
+</style>
 </head>
 <body>
-  <!-- below starts the content visible on the webpage -->
 
-<div class="container">
-    <h2>Calculate Risk of Acute Cellular Rejection within 1 Year after Conversion to Belatacept </h2>
-    <div class="subtitle">BETA VERSION - pending peer review </div>
-	
-	<div class="form-group" style="background: #e6f0fa; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
-        <label>Days from transplant to conversion </label>
-		<label style="font-size: 0.9rem; margin-top:10px;"> Transplant date: </label>
+<div class="container theme-4" id="main-container">
+    <h2>Calculate Risk of Banff 1A or Higher Acute Cellular Rejection within 1 Year after Conversion to Belatacept</h2>
+    <div class="subtitle">BETA VERSION - pending peer review</div>
+
+    <!-- Model selector toggle -->
+    <div class="model-toggle">
+        <button class="toggle-btn" id="btn-3var" onclick="setModel(3)">3-Variable Model</button>
+        <button class="toggle-btn active" id="btn-4var" onclick="setModel(4)">4-Variable Model</button>
+    </div>
+
+    <div style="text-align:center;">
+        <span class="model-badge" id="active-model-badge">4-Variable Model</span>
+    </div>
+
+    <!-- Days from transplant -->
+    <div class="form-group input-section" style="padding: 15px; border-radius: 8px; border: 1px solid #eee;">
+        <label>Days from transplant to conversion</label>
+        <label style="font-size: 0.9rem; margin-top:10px; font-weight: normal;">Transplant date:</label>
         <input type="date" id="txp_date" onchange="calcDays()">
-        
-        <label style="font-size: 0.9rem; margin-top:10px;"> (Intended) date of belatacept conversion: </label>
+
+        <label style="font-size: 0.9rem; margin-top:10px; font-weight: normal;">(Intended) date of belatacept conversion:</label>
         <input type="date" id="bela_date" onchange="calcDays()">
-        
+
         <p style="font-size: 1.1rem; color: #666;">Calculated days: <span id="calc_days_display">0</span></p>
-        
-        <label style="color: #666; font-size: 1rem; margin-top:10px;">Optional: manually enter days from transplant to conversion. Overrides calculated days above.</label>
+
+        <label style="color: #666; font-size: 1rem; margin-top:10px; font-weight: normal;">Optional: manually enter days from transplant to conversion. Overrides calculated days above.</label>
         <input type="number" id="manual_days" placeholder="Enter days directly">
     </div>
-	
-	<div class="form-group" style="background: #e6f0fa; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
+
+    <!-- HLA -->
+    <div class="form-group input-section" style="padding: 15px; border-radius: 8px; border: 1px solid #eee;">
         <label>HLA Mismatches (0-6)</label>
         <input type="number" id="hla" value="3" min="0" max="6">
     </div>
 
-	<div class="form-group" style="background: #e6f0fa; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
+    <!-- Induction -->
+    <div class="form-group input-section" style="padding: 15px; border-radius: 8px; border: 1px solid #eee;">
         <label>Induction Immunosuppression</label>
         <select id="induction">
             <option value="1">Basiliximab</option>
@@ -84,147 +109,178 @@
         </select>
     </div>
 
-	<div class="form-group" style="background: #e6f0fa; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
+    <!-- Dialysis vintage (4-variable model only) -->
+    <div class="form-group input-section" id="dialysis-section" style="padding: 15px; border-radius: 8px; border: 1px solid #eee;">
         <label>Dialysis vintage</label>
-		<label style="font-size: 0.9rem; margin-top:10px;"> Date started dialysis: </label>
+        <label style="font-size: 0.9rem; margin-top:10px; font-weight: normal;">Date started dialysis:</label>
         <input type="date" id="dialysis_start" onchange="calcVintage()">
-        
+
         <p style="font-size: 1.1rem; color: #666;">Calculated days: <span id="calc_vintage_display">0</span></p>
 
-        <label style="color: #666; font-size: 1rem; margin-top:10px;">Optional: manually enter patient's time on dialysis (months). Enter 0 for preemptive transplant. Overrides calculated vintage above.</label>
+        <label style="color: #666; font-size: 1rem; margin-top:10px; font-weight: normal;">Optional: manually enter patient's time on dialysis (months). Enter 0 for preemptive transplant. Overrides calculated vintage above.</label>
         <input type="number" id="manual_vintage_months" placeholder="Enter months">
     </div>
 
-	<button onclick="runModel()">Calculate ACR Risk</button>
+    <button class="calc-btn" onclick="runModel()">Calculate ACR Risk</button>
 
-	<div id="results">
-        <span id="res-label">Predicted probability of acute cellular rejection within 1 year of conversion:</span>
+    <div id="results">
+        <span id="res-label">Predicted probability of Banff 1A or higher acute cellular rejection within 1 year of conversion:</span>
         <span id="res-value" class="risk-pct">--</span>
     </div>
 
-	<div class="disclaimer">
-        Calculator is based on regression estimates from clinical data in which patients were converted from calcineurin 
+    <div class="auc-info">
+        <strong>Internal validation (optimism-corrected AUC):</strong><br>
+        3-Variable Model: <strong>0.78</strong> &nbsp;|&nbsp; 4-Variable Model: <strong>0.79</strong>
+    </div>
+
+    <div class="disclaimer">
+        Calculator is based on regression estimates from clinical data in which patients were converted from calcineurin
         inhibitors to belatacept between 8 and 4207 days after transplant.
         <br><br>
-        <strong>Version as of: April 2026.</strong>
+        <strong>Version as of: June 2026.</strong>
         <br><br>
         NOTE: BETA VERSION - original study deriving this model is pending peer review; manuscript link will be available
-        at the time of publication. 
+        at the time of publication.
     </div>
 </div>
 
 <script>
-// 1. --- DATE CALCULATING FUNCTIONS
+let activeModel = 4;
+
+// --- MODEL TOGGLE
+function setModel(n) {
+    activeModel = n;
+
+    document.getElementById('btn-3var').classList.toggle('active', n === 3);
+    document.getElementById('btn-4var').classList.toggle('active', n === 4);
+    document.getElementById('active-model-badge').innerText = n + '-Variable Model';
+    document.getElementById('dialysis-section').style.display = n === 4 ? 'block' : 'none';
+
+    const container = document.getElementById('main-container');
+    container.classList.toggle('theme-3', n === 3);
+    container.classList.toggle('theme-4', n === 4);
+
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('res-value').innerText = '--';
+}
+
+// --- DATE FUNCTIONS
 function calcDays() {
     const txp = new Date(document.getElementById('txp_date').value);
     const bela = new Date(document.getElementById('bela_date').value);
-    
     if (!isNaN(txp) && !isNaN(bela)) {
-        const diffTime = bela - txp;
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        // Update the display on the page
+        const diffDays = Math.ceil((bela - txp) / (1000 * 60 * 60 * 24));
         document.getElementById('calc_days_display').innerText = diffDays > 0 ? diffDays : 0;
-    } }
-	
+        calcVintage();
+    }
+}
+
 function calcVintage() {
     const start = new Date(document.getElementById('dialysis_start').value);
-    const txp = new Date(document.getElementById('txp_date').value); // Using the txp_date from the first section
-    
+    const txp = new Date(document.getElementById('txp_date').value);
     if (!isNaN(start) && !isNaN(txp)) {
-        const diffTime = txp - start;
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        // Update the display on the page
+        const diffDays = Math.ceil((txp - start) / (1000 * 60 * 60 * 24));
         document.getElementById('calc_vintage_display').innerText = diffDays > 0 ? diffDays : 0;
-    }}
-	
-// 2. --- SPLINE MATH 
-function getNaturalSplineBasis(x) {
-    const L = 8;    // Boundary Knot Low
-    const K = 180;  // Internal Knot
-    const R = 4207; // Boundary Knot High
-	// Truncated cubic function helper - It calculates (x-k)^3 but only if x > k. This creates the "curves" in the spline.
-    const d = (val, knot) => {
-        const num = Math.pow(Math.max(0, val - knot), 3) - Math.pow(Math.max(0, val - R), 3);
-        const den = R - knot;
-        return num / den;
-    };
-	// The two basis functions (ns1 and ns2)
-    // These are derived from the construction of natural cubic splines
-    let basis1 = x; // first part of spline is simple linear trend
-    let basis2 = d(x, L) - d(x, K); // makes a curve within the boundaries defined by K and R above
-	
-	return [basis1, basis2]; }
+    }
+}
 
-// 3. --- THE MATHEMATICAL MODEL
+// Clear manual field when dates change; clear display when typing manually
+document.getElementById('txp_date').addEventListener('change', function() { document.getElementById('manual_days').value = ''; });
+document.getElementById('bela_date').addEventListener('change', function() { document.getElementById('manual_days').value = ''; });
+document.getElementById('manual_days').addEventListener('input', function() { document.getElementById('calc_days_display').innerText = '0'; });
+
+// --- NATURAL CUBIC SPLINE BASIS (replicates splines::ns, knots=180, boundary=[8,4207])
+// QR decomposition constants back-calculated to match R's ns() matrix output
+function getNaturalSplineBasis(x) {
+    const L = 8;
+    const K = 180;
+    const R = 4207;
+
+    const d = (val, knot) => Math.pow(Math.max(0, val - knot), 3);
+    const u1 = x - L;
+    const u2 = d(x, L) - ((R - L) / (R - K)) * d(x, K) + ((K - L) / (R - K)) * d(x, R);
+
+    const c11 =  0.0005599907;
+    const c12 = -3.5485375e-10;
+    const c21 = -0.0002858495;
+    const c22 =  3.4945722e-10;
+
+    return [(c11 * u1) + (c12 * u2), (c21 * u1) + (c22 * u2)];
+}
+
+// --- COEFFICIENTS
+const COEFFS = {
+    4: {
+        b0:          -4.86916667904426,
+        b_ns1:       -4.21091013584256,
+        b_ns2:       -1.02502050180638,
+        b_hla:        0.559234471975182,
+        b_dialysis:   0.000389800741963782,
+        b_induction:  1.34076595397589
+    },
+    3: {
+        b0:          -4.6827,
+        b_ns1:       -4.2406,
+        b_ns2:       -0.8729,
+        b_hla:        0.6337,
+        b_dialysis:   0,
+        b_induction:  1.2896
+    }
+};
+
+// --- RUN MODEL
 function runModel() {
-  /* Determine which "Days" value to use */
+    const coeff = COEFFS[activeModel];
+
     let final_days = parseFloat(document.getElementById('manual_days').value);
     if (isNaN(final_days)) {
         final_days = parseFloat(document.getElementById('calc_days_display').innerText);
-	}
-  /* Determine which "Vintage" value to use */
-    let final_vintage = parseFloat(document.getElementById('manual_vintage_months').value);
-    if (!isNaN(final_vintage)) {
-        final_vintage = final_vintage * 30.4375; // Convert manual months to days
-    } else {
-        final_vintage = parseFloat(document.getElementById('calc_vintage_display').innerText);
     }
-  /* Set variables for HLA and Induction */
-	const x_hla = parseFloat(document.getElementById('hla').value);
+
+    const x_hla = parseFloat(document.getElementById('hla').value);
     const x_induction = parseFloat(document.getElementById('induction').value);
-	
-  /* HARD LIMIT VALIDATION - stop the calculation if numbers are outside set ranges */
-    if (final_days < 8 ) {
+
+    if (final_days < 8) {
         alert("Calculator was developed for conversion >7 days after transplant. Please enter a number greater than 7.");
-        return;    } // Stops the function
+        return;
+    }
     if (x_hla < 0 || x_hla > 6) {
         alert("HLA Mismatches must be between 0 and 6.");
-        return;    }
-    if (final_vintage < 0) {
-        alert("Dialysis Vintage cannot be negative.");
-        return;    }
-	
-  /* CALCULATIONS */ 
-	// Spline Transformation - transform 'days' into two variables just like R did 
-    const [ns1_raw, ns2_raw] = getNaturalSplineBasis(final_days);
+        return;
+    }
 
-	// For implementation, use the coefficients from R GLM output. 
-	// But note that in original R calculations they apply 'matrix basis function' 
+    const [ns1, ns2] = getNaturalSplineBasis(final_days);
 
-	// Regression Coefficients (from GLM output in R)
-    const b0 = -2.8326130;
-    const b_ns1 = -5.0316209;
-    const b_ns2 = -2.0085340;
-    const b_hla = 0.3409775;
-    const b_dialysis = 0.0002568;
-    const b_induction = 0.7946519;
+    let z = coeff.b0 +
+            (coeff.b_ns1 * ns1) +
+            (coeff.b_ns2 * ns2) +
+            (coeff.b_hla * x_hla) +
+            (coeff.b_induction * x_induction);
 
-	// Calculate Linear Predictor (z)
-    // Sum of (Coefficient * Variable). Value of z is 'logits' and will need to be tranformed to probability later
-    let z = b0 + 
-            (b_ns1 * ns1_raw / 4207) + // Scaled to max range
-            (b_ns2 * ns2_raw / 1000000000) + // Cubic scaling
-            (b_hla * x_hla) + 
-            (b_dialysis * final_vintage) + 
-            (b_induction * x_induction);
-	
-	// Logistic Transformation - transform logit into a probability then into a percent
-    // Probability = 1 / (1 + e^-z)
+    if (activeModel === 4) {
+        let final_vintage = parseFloat(document.getElementById('manual_vintage_months').value);
+        if (!isNaN(final_vintage)) {
+            final_vintage = final_vintage * 30.4375;
+        } else {
+            final_vintage = parseFloat(document.getElementById('calc_vintage_display').innerText);
+        }
+        if (final_vintage < 0) {
+            alert("Dialysis Vintage cannot be negative.");
+            return;
+        }
+        z += coeff.b_dialysis * final_vintage;
+    }
+
     const prob = 1 / (1 + Math.exp(-z));
     const percent = (prob * 100).toFixed(2);
-	
-/* UI Update */
+
     const resDiv = document.getElementById('results');
     const resVal = document.getElementById('res-value');
-    
     resDiv.style.display = 'block';
     resVal.innerText = percent + '%';
-	// display output as black text
     resVal.style.color = '#333';
 }
 </script>
 
 </body>
 </html>
-
-
